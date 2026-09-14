@@ -1,0 +1,256 @@
+@dc:title "Vinarcik Apollo GNC Description"
+@dc:description "The Vinarcik Apollo GNC ontologies."
+description <http://www.example.com/apollo-cm-gnc/project/description#> as apollo-cm-gnc-desc {
+    uses <http://purl.org/dc/elements/1.1/> as dc
+    uses <http://www.example.com/apollo-cm-gnc/method/vocabulary#> as method
+
+@dc:description "The Apollo GNC computer."
+instance ApolloComputer : method:Computer [
+    method:name "Apollo GNC"
+    method:manufacturer "Raytheon"
+    method:massKg 32.0
+    method:powerConsumptionWatts 55.0
+    method:clockRateHz 2048000.0
+    method:poweredBy ApolloElectricalBus
+    method:contains ApolloMemory
+]
+
+@dc:description "The Apollo CM Flight Controls."
+instance ApolloFlightControls : method:FlightControls [
+    method:name "Apollo Flight Controls"
+    method:dependsOn ApolloComputer
+    method:poweredBy ApolloElectricalBus
+    method:interfacesWith ApolloComputer
+]
+
+@dc:description "The Apollo GNC IMU."
+instance ApolloIMU : method:IMU [
+    method:name "Apollo IMU"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloOpticalSubsystem
+    method:manufacturer "AC Electronics Division, General Motors"
+    method:poweredBy ApolloElectricalBus
+    method:interfacesWith ApolloOpticalSubsystem
+]
+
+@dc:description "The Apollo GNC DSKY. This is the interface between the astronauts and the GNC computer."
+instance ApolloDSKY : method:DSKY [
+    method:name "Apollo DSKY"
+    method:dependsOn ApolloComputer
+    method:poweredBy ApolloElectricalBus
+    method:interfacesWith ApolloComputer
+]
+
+@dc:description "This is the Memory for the Apollo GNC."
+instance ApolloMemory : method:Memory [
+    method:name "Apollo Memory"
+    method:dependsOn ApolloComputer
+    method:fixedMemoryWords 36864
+    method:erasableMemoryWords 2048
+    method:poweredBy ApolloElectricalBus
+    method:contains ApolloP20
+    method:contains ApolloP21
+    method:contains ApolloP22
+    method:contains ApolloP23
+    method:contains ApolloP24
+    method:contains ApolloP51
+    method:contains ApolloP52
+    method:contains ApolloP40
+    method:contains ApolloP41
+    method:contains ApolloP63
+    method:contains ApolloP64
+    method:contains ApolloP65
+    method:contains ApolloP66
+    method:contains ApolloP67
+]
+
+@dc:description "The Apollo GNC Optical Subsystem."
+instance ApolloOpticalSubsystem : method:OpticalSubsystem [
+    method:name "Apollo Optical Subsystem"
+    method:dependsOn ApolloComputer
+    method:manufacturer "Kollsman Instrument Company"
+    method:poweredBy ApolloElectricalBus
+]
+
+@dc:description "The electrical bus supplying power to the Apollo GNC components."
+instance ApolloElectricalBus : method:ElectricalBus [
+    method:name "Apollo Electrical Bus"
+]
+
+@dc:description "The onboard state vector maintained by the GNC system, used to target burns and entry."
+instance ApolloStateVector : method:StateVector [
+    method:name "Apollo State Vector"
+]
+
+@dc:description "Program 20: Universal Tracking, the general-purpose rendezvous/state-vector navigation program."
+instance ApolloP20 : method:StateVectorNavigation [
+    method:name "P20 Universal Tracking"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloIMU
+    method:dependsOn ApolloOpticalSubsystem
+    method:programNumber 20
+    method:missionPhase "Rendezvous/Earth Orbit"
+    method:criticality "Critical"
+    method:updates ApolloStateVector
+]
+
+@dc:description "Program 21: Ground Track Determination."
+instance ApolloP21 : method:StateVectorNavigation [
+    method:name "P21 Ground Track Determination"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloIMU
+    method:dependsOn ApolloOpticalSubsystem
+    method:programNumber 21
+    method:missionPhase "Earth Orbit"
+    method:criticality "Non-Critical"
+    method:updates ApolloStateVector
+]
+
+@dc:description "Program 22: Orbital Navigation, a rendezvous radar/optics state-vector update."
+instance ApolloP22 : method:StateVectorNavigation [
+    method:name "P22 Orbital Navigation"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloIMU
+    method:dependsOn ApolloOpticalSubsystem
+    method:programNumber 22
+    method:missionPhase "Rendezvous/Earth Orbit"
+    method:criticality "Critical"
+    method:updates ApolloStateVector
+]
+
+@dc:description "Program 23: Cislunar Midcourse Navigation, using sextant star/horizon or star/planet sightings to refine the state vector during transit."
+instance ApolloP23 : method:StateVectorNavigation [
+    method:name "P23 Cislunar Midcourse Navigation"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloIMU
+    method:dependsOn ApolloOpticalSubsystem
+    method:programNumber 23
+    method:missionPhase "Translunar Coast"
+    method:criticality "Critical"
+    method:updates ApolloStateVector
+]
+
+@dc:description "Program 24: Rate Aided Optics Tracking."
+instance ApolloP24 : method:StateVectorNavigation [
+    method:name "P24 Rate Aided Optics Tracking"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloIMU
+    method:dependsOn ApolloOpticalSubsystem
+    method:programNumber 24
+    method:missionPhase "Rendezvous/Earth Orbit"
+    method:criticality "Critical"
+    method:updates ApolloStateVector
+]
+
+@dc:description "Program 51: IMU Orientation Determination, sighting stars to determine the platform's current orientation."
+instance ApolloP51 : method:Alignment [
+    method:name "P51 IMU Orientation Determination"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloIMU
+    method:dependsOn ApolloOpticalSubsystem
+    method:programNumber 51
+    method:missionPhase "Midcourse/Coast"
+    method:criticality "Critical"
+    method:calibrates ApolloIMU
+    method:precedes ApolloP52
+]
+
+@dc:description "Program 52: IMU Realign, recalibrating the platform to a desired reference orientation using the optics."
+instance ApolloP52 : method:Alignment [
+    method:name "P52 IMU Realign"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloIMU
+    method:dependsOn ApolloOpticalSubsystem
+    method:programNumber 52
+    method:missionPhase "Midcourse/Coast"
+    method:criticality "Critical"
+    method:calibrates ApolloIMU
+]
+
+@dc:description "Program 40: SPS Thrusting, executing a Service Propulsion System main-engine burn."
+instance ApolloP40 : method:PoweredFlight [
+    method:name "P40 SPS Thrusting"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloP20
+    method:dependsOn ApolloStateVector
+    method:programNumber 40
+    method:missionPhase "Powered Flight"
+    method:criticality "Critical"
+]
+
+@dc:description "Program 41: RCS Thrusting, executing a Reaction Control System burn."
+instance ApolloP41 : method:PoweredFlight [
+    method:name "P41 RCS Thrusting"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloP20
+    method:dependsOn ApolloStateVector
+    method:programNumber 41
+    method:missionPhase "Powered Flight"
+    method:criticality "Critical"
+]
+
+@dc:description "Program 63: Entry Initialization, beginning the guided entry sequence using the state vector."
+instance ApolloP63 : method:Reentry [
+    method:name "P63 Entry Initialization"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloP20
+    method:dependsOn ApolloStateVector
+    method:programNumber 63
+    method:missionPhase "Entry"
+    method:criticality "Critical"
+    method:monitors ApolloFlightControls
+    method:precedes ApolloP64
+]
+
+@dc:description "Program 64: Entry Post 0.05G, guidance after the onset of measurable atmospheric deceleration."
+instance ApolloP64 : method:Reentry [
+    method:name "P64 Entry Post 0.05G"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloP20
+    method:dependsOn ApolloStateVector
+    method:programNumber 64
+    method:missionPhase "Entry"
+    method:criticality "Critical"
+    method:monitors ApolloFlightControls
+    method:precedes ApolloP65
+]
+
+@dc:description "Program 65: Entry Upcontrol, managing lift to control the entry corridor."
+instance ApolloP65 : method:Reentry [
+    method:name "P65 Entry Upcontrol"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloP20
+    method:dependsOn ApolloStateVector
+    method:programNumber 65
+    method:missionPhase "Entry"
+    method:criticality "Critical"
+    method:monitors ApolloFlightControls
+    method:precedes ApolloP66
+]
+
+@dc:description "Program 66: Entry Ballistic, a backup ballistic entry mode."
+instance ApolloP66 : method:Reentry [
+    method:name "P66 Entry Ballistic"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloP20
+    method:dependsOn ApolloStateVector
+    method:programNumber 66
+    method:missionPhase "Entry"
+    method:criticality "Critical"
+    method:monitors ApolloFlightControls
+    method:precedes ApolloP67
+]
+
+@dc:description "Program 67: Entry Final Phase, guidance through drogue/main chute deployment."
+instance ApolloP67 : method:Reentry [
+    method:name "P67 Entry Final Phase"
+    method:dependsOn ApolloComputer
+    method:dependsOn ApolloP20
+    method:dependsOn ApolloStateVector
+    method:programNumber 67
+    method:missionPhase "Entry"
+    method:criticality "Critical"
+    method:monitors ApolloFlightControls
+]
+
+}

@@ -1,0 +1,7 @@
+@dc:title "Vinarcik Apollo GNC Description Bundle"
+@dc:description "A bundle that includes the Vinarcik Apollo GNC description."
+description bundle <http://www.example.com/apollo-cm-gnc/project/bundle#> as project-bundle {
+    uses <http://purl.org/dc/elements/1.1/> as dc
+    uses <http://www.example.com/apollo-cm-gnc/method/bundle#>
+    includes <http://www.example.com/apollo-cm-gnc/project/description#>
+}

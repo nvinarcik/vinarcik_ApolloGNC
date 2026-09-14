@@ -1,0 +1,6 @@
+@dc:title "Vinarcik Apollo GNC Vocabulary Bundle"
+@dc:description "A packaging bundle that includes the Vinarcik Apollo GNC vocabulary."
+vocabulary bundle <http://www.example.com/apollo-cm-gnc/method/bundle#> as method-bundle {
+    includes <http://purl.org/dc/elements/1.1/> as dc
+    includes <http://www.example.com/apollo-cm-gnc/method/vocabulary#>
+}

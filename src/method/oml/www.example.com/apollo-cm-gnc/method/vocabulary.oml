@@ -1,0 +1,199 @@
+@dc:title "Vinarcik Apollo GNC Vocabulary"
+@dc:description "The Vinarcik Apollo GNC ontologies."
+vocabulary <http://www.example.com/apollo-cm-gnc/method/vocabulary#> as method {
+    extends <http://purl.org/dc/elements/1.1/> as dc
+    extends <http://www.w3.org/2001/XMLSchema#> as xsd
+
+    @dc:description "An example aspect — a reusable trait that concepts can share."
+    aspect Identified
+
+    @dc:description "The human-readable name of an Identified element."
+    scalar property name [
+        domain Identified
+        range xsd:string
+        functional
+    ]
+
+    @dc:description "An example concept — replace it with your own domain type."
+    concept Component < Identified
+
+    @dc:description "A relation linking an Identified element to one it depends on. Asymmetric and irreflexive: nothing depends on itself, and dependency never runs both ways — a violation here means a circular dependency was introduced."
+    relation dependsOn [
+        from Identified
+        to Identified
+        reverse dependedOnBy
+        asymmetric
+        irreflexive
+    ]
+
+concept Computer < Component
+concept IMU < Component
+concept OpticalSubsystem < Component
+concept FlightControls < Component
+concept DSKY < Component
+
+@dc:description "The organization that manufactured this component."
+scalar property manufacturer [
+    domain Component
+    range xsd:string
+    functional
+]
+
+@dc:description "The mass of this component, in Kilograms."
+scalar property massKg [
+    domain Component
+    range xsd:decimal
+    functional
+]
+
+@dc:description "The electrical power draw of this component, in Watts."
+scalar property powerConsumptionWatts [
+    domain Component
+    range xsd:decimal
+    functional
+]
+
+@dc:description "The processor clock frequency of a Computer, in Hertz."
+scalar property clockRateHz [
+    domain Computer
+    range xsd:decimal
+    functional
+]
+
+@dc:description "The onboard position/velocity solution maintained by the GNC system, used to target burns and entry."
+concept StateVector < Identified
+
+@dc:description "A program or routine that runs on the Apollo GNC computer."
+concept Routine < Identified
+
+@dc:description "The AGC program number (e.g. 20, 51, 40) assigned to a Routine."
+scalar property programNumber [
+    domain Routine
+    range xsd:integer
+    functional
+]
+
+@dc:description "The mission phase during which this Routine is primarily executed."
+scalar property missionPhase [
+    domain Routine
+    range xsd:string
+    functional
+]
+
+@dc:description "A systems-engineering criticality classification for this Routine."
+scalar property criticality [
+    domain Routine
+    range xsd:string
+    functional
+]
+
+@dc:description "A category of Routine concerned with determining or maintaining the spacecraft's navigational state: tracking and platform alignment."
+concept Navigation < Routine
+
+@dc:description "A category of Routine concerned with actively controlling or moving the spacecraft: burns and atmospheric entry."
+concept Maneuver < Routine
+
+@dc:description "A Routine that depends, directly or transitively, on the IMU — the set of programs affected if the IMU fails."
+concept IMUDependentRoutine = Routine [
+    restricts some dependsOn to IMU
+]
+
+@dc:description "A relation from an Alignment program to the IMU it recalibrates. Functional: a Routine calibrates at most one IMU."
+relation calibrates [
+    from IMUDependentRoutine
+    to IMU
+    reverse calibratedBy
+    functional
+]
+
+@dc:description "A Routine that calibrates at least one IMU. Since calibrates is functional (at most one), any Routine in this class calibrates exactly one IMU."
+concept IMUCalibrator = Routine [
+    restricts some calibrates to IMU
+]
+
+@dc:description "A navigation program (e.g. the P20-series) that computes a state vector from sensor data."
+concept StateVectorNavigation < Navigation, IMUDependentRoutine
+
+@dc:description "An IMU alignment/realignment program (e.g. P51/P52) that recalibrates the platform using the optics. As an IMUCalibrator, every Alignment program calibrates exactly one IMU."
+concept Alignment < Navigation, IMUDependentRoutine, IMUCalibrator
+
+@dc:description "A program that executes a burn (e.g. P40/P41)."
+concept PoweredFlight < Maneuver, IMUDependentRoutine
+
+@dc:description "A Command Module reentry program."
+concept Reentry < Maneuver, IMUDependentRoutine
+
+@dc:description "The memory of the Apollo GNC computer."
+concept Memory < Component
+
+@dc:description "The fixed (core rope) memory capacity of a Memory unit, in words."
+scalar property fixedMemoryWords [
+    domain Memory
+    range xsd:integer
+    functional
+]
+
+@dc:description "The erasable (core) memory capacity of a Memory unit, in words."
+scalar property erasableMemoryWords [
+    domain Memory
+    range xsd:integer
+    functional
+]
+
+@dc:description "The electrical bus that supplies power to dependent components."
+concept ElectricalBus < Component
+
+@dc:description "A rule that infers transitive dependencies between Identified elements."
+rule TransitiveDependency [
+    dependsOn(x, y) & dependsOn(y, z)
+    -> dependsOn(x, z)
+]
+
+@dc:description "Containment relationships between Identified elements, forming a strict part-whole tree. Asymmetric and irreflexive: nothing contains itself or its own container. Inverse functional: each part belongs to exactly one whole."
+relation contains [
+    from Identified
+    to Identified
+    reverse partOf
+    asymmetric
+    irreflexive
+    inverse functional
+]
+
+@dc:description "A relation marking that one Routine executes before another in a fixed operational sequence. Asymmetric and irreflexive: a Routine cannot precede itself or mutually precede another."
+relation precedes [
+    from Routine
+    to Routine
+    reverse follows
+    asymmetric
+    irreflexive
+]
+
+@dc:description "A symmetric data/communication link between two components."
+relation interfacesWith [
+    from Component
+    to Component
+    symmetric
+]
+
+@dc:description "A relation from a Routine to a Component whose status or output it observes during execution."
+relation monitors [
+    from Routine
+    to Component
+    reverse monitoredBy
+]
+
+@dc:description "A relation from a Component to the ElectricalBus that supplies its power."
+relation poweredBy [
+    from Component
+    to ElectricalBus
+    reverse powers
+]
+
+@dc:description "A relation from a StateVectorNavigation program to the StateVector it computes or refines."
+relation updates [
+    from StateVectorNavigation
+    to StateVector
+    reverse updatedBy
+]
+
+}
