@@ -1,0 +1,85 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix method: <http://www.example.com/apollo-cm-gnc/method/vocabulary#> .
+
+# Pattern: Component
+#
+# Focal type:        method:Component
+# Required structure: one optional container (method:partOf), forming the
+#                     same containment tree as `method:contains`/`partOf` in
+#                     the vocabulary.
+# Expected content:   name, manufacturer, mass, power draw, electrical bus.
+# Rules:              a Component that draws power should report how much.
+#
+# Backs the Components tree-editor in
+# src/model/md/www.example.com/apollo-cm-gnc/project/components.md.
+
+method:ComponentShape
+    a sh:NodeShape ;
+    sh:targetClass method:Component ;
+
+    sh:property [
+        sh:path method:name ;
+        sh:name "Name" ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:order 1 ;
+    ] ;
+
+    sh:property [
+        sh:path method:partOf ;
+        sh:name "Container" ;
+        sh:class method:Component ;
+        sh:maxCount 1 ;
+        dash:composite true ;
+        sh:order 2 ;
+    ] ;
+
+    sh:property [
+        sh:path method:manufacturer ;
+        sh:name "Manufacturer" ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:order 3 ;
+    ] ;
+
+    sh:property [
+        sh:path method:massKg ;
+        sh:name "Mass (kg)" ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1 ;
+        sh:order 4 ;
+    ] ;
+
+    sh:property [
+        sh:path method:powerConsumptionWatts ;
+        sh:name "Power (W)" ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1 ;
+        sh:order 5 ;
+    ] ;
+
+    sh:property [
+        sh:path method:poweredBy ;
+        sh:name "Electrical Bus" ;
+        sh:class method:ElectricalBus ;
+        sh:maxCount 1 ;
+        sh:order 6 ;
+    ] ;
+
+    # Business rule: a Component that draws power from a bus should also
+    # report how much it draws — catches parts that were wired up but never
+    # given a wattage.
+    sh:sparql [
+        sh:message "This Component is poweredBy an ElectricalBus but has no powerConsumptionWatts. Add a wattage, or remove the poweredBy link if it isn't known yet." ;
+        sh:select """
+            PREFIX method: <http://www.example.com/apollo-cm-gnc/method/vocabulary#>
+            SELECT $this
+            WHERE {
+                $this method:poweredBy ?bus .
+                FILTER NOT EXISTS { $this method:powerConsumptionWatts ?watts }
+            }
+        """ ;
+    ] ;
+    .

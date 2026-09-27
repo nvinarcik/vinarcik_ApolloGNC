@@ -1,0 +1,87 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dash: <http://datashapes.org/dash#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix method: <http://www.example.com/apollo-cm-gnc/method/vocabulary#> .
+
+# Pattern: Routine
+#
+# Focal type:        method:Routine
+# Required structure: programNumber, missionPhase, criticality.
+# Expected content:   which IMU it calibrates (if any); which Component
+#                     contains it, shown read-only for context.
+# Rules:              criticality is drawn from a fixed value set; a Routine
+#                     that calibrates an IMU must also depend on that IMU.
+#
+# Backs the Routines table-editor in
+# src/model/md/www.example.com/apollo-cm-gnc/project/routines.md.
+
+method:RoutineShape
+    a sh:NodeShape ;
+    sh:targetClass method:Routine ;
+
+    sh:property [
+        sh:path method:name ;
+        sh:name "Name" ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:order 1 ;
+    ] ;
+
+    sh:property [
+        sh:path method:programNumber ;
+        sh:name "Program #" ;
+        sh:datatype xsd:integer ;
+        sh:maxCount 1 ;
+        sh:order 2 ;
+    ] ;
+
+    sh:property [
+        sh:path method:missionPhase ;
+        sh:name "Mission Phase" ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:order 3 ;
+    ] ;
+
+    # Business rule: criticality is a controlled vocabulary, not free text.
+    sh:property [
+        sh:path method:criticality ;
+        sh:name "Criticality" ;
+        sh:in ( "Critical" "Non-Critical" ) ;
+        sh:maxCount 1 ;
+        sh:order 4 ;
+    ] ;
+
+    sh:property [
+        sh:path method:calibrates ;
+        sh:name "Calibrates IMU" ;
+        sh:class method:IMU ;
+        sh:maxCount 1 ;
+        sh:order 5 ;
+    ] ;
+
+    # Read-only context, not editable work: which Component this Routine
+    # lives under (e.g. Memory), shown for orientation only.
+    sh:property [
+        sh:path method:partOf ;
+        sh:name "Container" ;
+        sh:class method:Component ;
+        sh:maxCount 1 ;
+        dash:readOnly true ;
+        sh:order 6 ;
+    ] ;
+
+    # Business rule: calibrates implies dependsOn — a Routine can't
+    # recalibrate an IMU it doesn't assert a dependency on.
+    sh:sparql [
+        sh:message "This Routine calibrates an IMU it does not also dependsOn. Add the matching dependsOn edge to the same IMU." ;
+        sh:select """
+            PREFIX method: <http://www.example.com/apollo-cm-gnc/method/vocabulary#>
+            SELECT $this
+            WHERE {
+                $this method:calibrates ?imu .
+                FILTER NOT EXISTS { $this method:dependsOn ?imu }
+            }
+        """ ;
+    ] ;
+    .
