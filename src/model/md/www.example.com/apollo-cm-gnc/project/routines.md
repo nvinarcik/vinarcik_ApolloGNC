@@ -17,7 +17,26 @@ The table below is generated from `RoutineShape`; the shape is the source of tru
 
 method:RoutineShape
     a sh:NodeShape ;
-    sh:targetClass method:Routine ;
+    # Each leaf subclass is listed explicitly: instances in the description
+    # are typed only with leaf classes (never method:Routine directly), and
+    # without inference a bare `a method:Routine` query matches nothing.
+    sh:targetClass method:Routine ,
+                   method:StateVectorNavigation ,
+                   method:Alignment ,
+                   method:PoweredFlight ,
+                   method:Reentry ;
+
+    # Materialize `partOf` from the asserted `contains` edge so the shape
+    # works whether or not the reasoned entailments are loaded.
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:order 0 ;
+        sh:construct """
+            PREFIX method: <http://www.example.com/apollo-cm-gnc/method/vocabulary#>
+            CONSTRUCT { $this method:partOf ?parent }
+            WHERE { ?parent method:contains $this }
+        """ ;
+    ] ;
     sh:property [
         sh:path method:name ;
         sh:name "Name" ;
