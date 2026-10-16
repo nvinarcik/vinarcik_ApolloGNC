@@ -176,15 +176,16 @@ description <http://www.example.com/apollo-cm-gnc/codegen/impact#> as impact {
             {%- set lines = [] %}
             {%- for r in rows %}
             {%- set via = objects(r, "ir:via") | sort | join(", ") %}
-            {%- set _ = lines.push("| " + (object(r, "ir:program") or "") + " | " + object(r, "ir:name") + " | " + object(r, "ir:kind") + " | " + (object(r, "ir:phase") or "") + " | " + (object(r, "ir:criticality") or "") + " | " + (via or "-") + " |") %}
+            {%- set _ = lines.push({ key: (object(r, "ir:program") or 0) | int, text: "| " + (object(r, "ir:program") or "") + " | " + object(r, "ir:name") + " | " + object(r, "ir:kind") + " | " + (object(r, "ir:phase") or "") + " | " + (object(r, "ir:criticality") or "") + " | " + (via or "-") + " |" }) %}
             {%- endfor %}
 
             {{ rows | length }} flight program{{ "s" if rows | length != 1 }} depend{{ "s" if rows | length == 1 }} on {{ entry.name }}:
 
             | Program | Name | Kind | Mission phase | Criticality | Through |
             |---|---|---|---|---|---|
-            {%- for line in lines | sort %}
-            {{ line }}
+            {#- sort numerically by program number, not as text #}
+            {%- for line in lines | sort(false, false, "key") %}
+            {{ line.text }}
             {%- endfor %}
             {%- else %}
 
