@@ -164,7 +164,7 @@ description <http://www.example.com/apollo-cm-gnc/codegen/impact#> as impact {
             {%- set _ = loadRows.push("| " + object(l, "ir:name") + " | " + (w or "unknown") + " |") %}
             {%- endfor %}
 
-            Electrical load: {{ loads | length }} components, {{ watts | sum }} W in total{% if watts | length < loads | length %} ({{ (loads | length) - (watts | length) }} without a recorded draw){% endif %}.
+            Electrical load: {{ loads | length }} component{{ "s" if loads | length != 1 }}, {{ watts | sum }} W in total{% if watts | length < loads | length %} ({{ (loads | length) - (watts | length) }} without a recorded draw){% endif %}.
 
             | Component | Power (W) |
             |---|---|
@@ -179,7 +179,7 @@ description <http://www.example.com/apollo-cm-gnc/codegen/impact#> as impact {
             {%- set _ = lines.push("| " + (object(r, "ir:program") or "") + " | " + object(r, "ir:name") + " | " + object(r, "ir:kind") + " | " + (object(r, "ir:phase") or "") + " | " + (object(r, "ir:criticality") or "") + " | " + (via or "-") + " |") %}
             {%- endfor %}
 
-            {{ rows | length }} flight programs depend on {{ entry.name }}:
+            {{ rows | length }} flight program{{ "s" if rows | length != 1 }} depend{{ "s" if rows | length == 1 }} on {{ entry.name }}:
 
             | Program | Name | Kind | Mission phase | Criticality | Through |
             |---|---|---|---|---|---|
