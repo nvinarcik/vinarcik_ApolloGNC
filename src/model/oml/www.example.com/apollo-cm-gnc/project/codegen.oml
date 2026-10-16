@@ -1,0 +1,17 @@
+@dc:title "Vinarcik Apollo GNC Codegen Configs"
+@dc:description "Generator runs for the Apollo CM GNC model."
+description <http://www.example.com/apollo-cm-gnc/project/codegen#> as configs {
+
+    uses <http://purl.org/dc/elements/1.1/> as dc
+    uses <http://opencaesar.io/codegen#> as codegen
+
+    extends <http://www.example.com/apollo-cm-gnc/codegen/impact#> as impact
+
+    instance impact : codegen:Config [
+        codegen:spec impact:ImpactReportSpec
+        codegen:context "http://www.example.com/apollo-cm-gnc/project/bundle"
+        codegen:binding [ codegen:key "path" codegen:value "build/docs" ]
+        codegen:binding [ codegen:key "file" codegen:value "Apollo-CM-GNC-impact.md" ]
+        codegen:binding [ codegen:key "title" codegen:value "Apollo CM GNC Component Impact Report" ]
+    ]
+}

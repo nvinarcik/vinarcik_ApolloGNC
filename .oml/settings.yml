@@ -4,10 +4,10 @@ oml-code:
 
 # project npm settings
 project:
-  name: "@oml/vinarcik-apollo-gnc"
-  version: 0.1.0
+  name: "@vinarcik/apollo-gnc-method"
+  version: 0.3.0
   title: Vinarcik Apollo GNC
-  description: The Vinarcik Apollo GNC ontologies.
+  description: A method for modeling spacecraft guidance, navigation and control (GNC) hardware and flight software, with editor templates, SHACL shapes and a component impact report generator.
 
 # source folders
 sources:
@@ -20,8 +20,15 @@ sources:
 # server:
 #   port: 8080
 
+# packing settings: only the reusable method goes into the package
+pack:
+  - include: [src/method]
+
 # Default CLI arguments per command, injected before your own (so you can override them on the
 # command line). Works for any oml command; key by command name. For example:
 # defaults:
 #   export: -o build/owl
 #   reason: -o build/owl -t
+defaults:
+  render: -m src/model/md -b build/web -c src/model/oml/www.example.com/apollo-cm-gnc/project/bundle.oml
+  pack: -o build/dist

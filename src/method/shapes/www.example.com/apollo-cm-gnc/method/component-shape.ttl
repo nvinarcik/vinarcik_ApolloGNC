@@ -13,7 +13,7 @@
 # Rules:              a Component that draws power should report how much.
 #
 # Backs the Components tree-editor in
-# src/model/md/www.example.com/apollo-cm-gnc/project/components.md.
+# src/method/md/www.example.com/apollo-cm-gnc/method/components.md (template).
 
 method:ComponentShape
     a sh:NodeShape ;

@@ -1,0 +1,196 @@
+@dc:title "Component Impact Report Generator"
+@dc:description "Generates a Markdown report of what depends on each component: the flight programs that depend on it directly or transitively, the components that depend on it, and the load on each electrical bus."
+description <http://www.example.com/apollo-cm-gnc/codegen/impact#> as impact {
+
+    uses <http://purl.org/dc/elements/1.1/> as dc
+    uses <http://opencaesar.io/codegen#> as codegen
+
+    instance ImpactReportSpec : codegen:Spec [
+        codegen:construct """
+            PREFIX rdfs:      <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX codegen:   <http://opencaesar.io/codegen#>
+            PREFIX method:    <http://www.example.com/apollo-cm-gnc/method/vocabulary#>
+            PREFIX ir:        <http://www.example.com/apollo-cm-gnc/codegen/impact/report#>
+            PREFIX templates: <http://www.example.com/apollo-cm-gnc/codegen/impact#>
+
+            CONSTRUCT {
+                ?file a codegen:File ;
+                    codegen:path ?path ;
+                    codegen:template templates:ImpactReportTemplate ;
+                    codegen:root ?report .
+
+                ?report a ir:Report ;
+                    ir:title ?title ;
+                    ir:component ?c .
+
+                ?c a ir:Component ;
+                    ir:name ?cName ;
+                    ir:kind ?cKind ;
+                    ir:watts ?watts ;
+                    ir:bus ?busName ;
+                    ir:dependentComponent ?dName ;
+                    ir:load ?load ;
+                    ir:routine ?row .
+
+                ?load ir:name ?pName ;
+                    ir:watts ?pWatts .
+
+                ?row ir:program ?num ;
+                    ir:name ?rName ;
+                    ir:kind ?rKind ;
+                    ir:phase ?phase ;
+                    ir:criticality ?crit ;
+                    ir:via ?viaName .
+            }
+            WHERE {
+                BIND(IRI("urn:impact:report") AS ?report)
+                BIND(IRI("urn:impact:file") AS ?file)
+                BIND(CONCAT("${path}/", "${file}") AS ?path)
+                BIND("${title}" AS ?title)
+
+                # Every component, through its asserted leaf type
+                ?c a ?cType .
+                ?cType rdfs:subClassOf* method:Component .
+                # The dataset carries inferred supertypes; keep only the most specific type
+                FILTER NOT EXISTS { ?c a ?cSub . ?cSub rdfs:subClassOf ?cType . FILTER(?cSub != ?cType) }
+                BIND(REPLACE(STR(?c), "^.*[/#]", "") AS ?cId)
+                BIND(REPLACE(STR(?cType), "^.*[/#]", "") AS ?cKind)
+                OPTIONAL { ?c method:name ?cName0 }
+                BIND(COALESCE(?cName0, ?cId) AS ?cName)
+                OPTIONAL { ?c method:powerConsumptionWatts ?watts }
+                OPTIONAL {
+                    ?c method:poweredBy ?bus .
+                    OPTIONAL { ?bus method:name ?busName0 }
+                    BIND(COALESCE(?busName0, REPLACE(STR(?bus), "^.*[/#]", "")) AS ?busName)
+                }
+
+                # Components that depend on this one directly
+                OPTIONAL {
+                    ?d method:dependsOn ?c .
+                    ?d a ?dType .
+                    ?dType rdfs:subClassOf* method:Component .
+                    OPTIONAL { ?d method:name ?dName0 }
+                    BIND(COALESCE(?dName0, REPLACE(STR(?d), "^.*[/#]", "")) AS ?dName)
+                }
+
+                # Components drawing power from this one (buses)
+                OPTIONAL {
+                    ?p method:poweredBy ?c .
+                    OPTIONAL { ?p method:name ?pName0 }
+                    OPTIONAL { ?p method:powerConsumptionWatts ?pWatts }
+                    BIND(COALESCE(?pName0, REPLACE(STR(?p), "^.*[/#]", "")) AS ?pName)
+                    # OPTIONAL groups are evaluated on their own, so build the key from ?c here, not ?cId
+                    BIND(IRI(CONCAT("urn:impact:load:", ENCODE_FOR_URI(STR(?c)), ":", ENCODE_FOR_URI(STR(?p)))) AS ?load)
+                }
+
+                # Routines that depend on this component directly or through other elements
+                OPTIONAL {
+                    ?r method:dependsOn+ ?c .
+                    ?r a ?rType .
+                    ?rType rdfs:subClassOf* method:Routine .
+                    FILTER NOT EXISTS { ?r a ?rSub . ?rSub rdfs:subClassOf ?rType . FILTER(?rSub != ?rType) }
+                    BIND(REPLACE(STR(?r), "^.*[/#]", "") AS ?rId)
+                    BIND(REPLACE(STR(?rType), "^.*[/#]", "") AS ?rKind)
+                    BIND(IRI(CONCAT("urn:impact:row:", ENCODE_FOR_URI(STR(?c)), ":", ?rId)) AS ?row)
+                    OPTIONAL { ?r method:name ?rName0 }
+                    BIND(COALESCE(?rName0, ?rId) AS ?rName)
+                    OPTIONAL { ?r method:programNumber ?num }
+                    OPTIONAL { ?r method:missionPhase ?phase }
+                    OPTIONAL { ?r method:criticality ?crit }
+                    # The routine's other dependencies that themselves lead to the component,
+                    # i.e. the path the dependency takes. The context includes reasoner
+                    # entailments (TransitiveDependency), so asserted and inferred dependsOn
+                    # edges cannot be told apart; the path is reported instead.
+                    OPTIONAL {
+                        ?r method:dependsOn ?v .
+                        FILTER(?v != ?c)
+                        ?v method:dependsOn+ ?c .
+                        OPTIONAL { ?v method:name ?vName0 }
+                        BIND(COALESCE(?vName0, REPLACE(STR(?v), "^.*[/#]", "")) AS ?viaName)
+                    }
+                }
+            }
+        """
+        codegen:parameter "path"
+        codegen:parameter "file"
+        codegen:parameter "title"
+    ]
+
+    instance ImpactReportTemplate : codegen:Template [
+        codegen:body """
+            {%- set report = object(file, "codegen:root") -%}
+            {%- set comps = [] -%}
+            {%- for c in objects(report, "ir:component") -%}
+            {%- set _ = comps.push({ name: object(c, "ir:name"), node: c }) -%}
+            {%- endfor -%}
+            # {{ object(report, "ir:title") }}
+
+            For each component: every flight program that depends on it, directly or through another program or component, so the effect of losing that component can be read off one table. "Through" lists the program's other dependencies that also lead to the component; "-" means the program depends on it only directly. Generated from the model; do not edit by hand.
+
+            ## Summary
+
+            | Component | Kind | Power (W) | Programs affected | Critical programs |
+            |---|---|---|---|---|
+            {%- for entry in comps | sort(false, false, "name") %}
+            {%- set rows = objects(entry.node, "ir:routine") %}
+            {%- set critical = [] %}
+            {%- for r in rows %}{% if object(r, "ir:criticality") == "Critical" %}{% set _ = critical.push(r) %}{% endif %}{% endfor %}
+            | {{ entry.name }} | {{ object(entry.node, "ir:kind") }} | {{ object(entry.node, "ir:watts") or "-" }} | {{ rows | length }} | {{ critical | length }} |
+            {%- endfor %}
+            {% for entry in comps | sort(false, false, "name") %}
+            {%- set c = entry.node %}
+            {%- set rows = objects(c, "ir:routine") %}
+            {%- set loads = objects(c, "ir:load") %}
+            {%- set dependents = objects(c, "ir:dependentComponent") %}
+
+            ## {{ entry.name }}
+
+            - **Kind:** {{ object(c, "ir:kind") }}
+            {%- if object(c, "ir:watts") %}
+            - **Power draw:** {{ object(c, "ir:watts") }} W
+            {%- endif %}
+            {%- if object(c, "ir:bus") %}
+            - **Powered by:** {{ object(c, "ir:bus") }}
+            {%- endif %}
+            {%- if dependents | length %}
+            - **Components that depend on it:** {{ dependents | sort | join(", ") }}
+            {%- endif %}
+            {%- if loads | length %}
+            {%- set watts = [] %}
+            {%- set loadRows = [] %}
+            {%- for l in loads %}
+            {%- set w = object(l, "ir:watts") %}
+            {%- if w %}{% set _ = watts.push(w | float) %}{% endif %}
+            {%- set _ = loadRows.push("| " + object(l, "ir:name") + " | " + (w or "unknown") + " |") %}
+            {%- endfor %}
+
+            Electrical load: {{ loads | length }} components, {{ watts | sum }} W in total{% if watts | length < loads | length %} ({{ (loads | length) - (watts | length) }} without a recorded draw){% endif %}.
+
+            | Component | Power (W) |
+            |---|---|
+            {%- for line in loadRows | sort %}
+            {{ line }}
+            {%- endfor %}
+            {%- endif %}
+            {%- if rows | length %}
+            {%- set lines = [] %}
+            {%- for r in rows %}
+            {%- set via = objects(r, "ir:via") | sort | join(", ") %}
+            {%- set _ = lines.push("| " + (object(r, "ir:program") or "") + " | " + object(r, "ir:name") + " | " + object(r, "ir:kind") + " | " + (object(r, "ir:phase") or "") + " | " + (object(r, "ir:criticality") or "") + " | " + (via or "-") + " |") %}
+            {%- endfor %}
+
+            {{ rows | length }} flight programs depend on {{ entry.name }}:
+
+            | Program | Name | Kind | Mission phase | Criticality | Through |
+            |---|---|---|---|---|---|
+            {%- for line in lines | sort %}
+            {{ line }}
+            {%- endfor %}
+            {%- else %}
+
+            No flight program depends on {{ entry.name }}.
+            {%- endif %}
+            {% endfor %}
+        """
+    ]
+}

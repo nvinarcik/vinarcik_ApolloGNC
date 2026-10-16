@@ -7,13 +7,14 @@
 #
 # Focal type:        method:Routine
 # Required structure: programNumber, missionPhase, criticality.
-# Expected content:   which IMU it calibrates (if any); which Component
+# Expected content:   which IMU it calibrates (if any); what it depends on;
+#                     which routines it precedes; which Component
 #                     contains it, shown read-only for context.
 # Rules:              criticality is drawn from a fixed value set; a Routine
 #                     that calibrates an IMU must also depend on that IMU.
 #
 # Backs the Routines table-editor in
-# src/model/md/www.example.com/apollo-cm-gnc/project/routines.md.
+# src/method/md/www.example.com/apollo-cm-gnc/method/routines.md (template).
 
 method:RoutineShape
     a sh:NodeShape ;
@@ -92,6 +93,18 @@ method:RoutineShape
 
     # Business rule: calibrates implies dependsOn — a Routine can't
     # recalibrate an IMU it doesn't assert a dependency on.
+    sh:property [
+        sh:path method:dependsOn ;
+        sh:name "Depends on" ;
+        sh:nodeKind sh:IRI ;
+        sh:order 7 ;
+    ] ;
+    sh:property [
+        sh:path method:precedes ;
+        sh:name "Precedes" ;
+        sh:class method:Routine ;
+        sh:order 8 ;
+    ] ;
     sh:sparql [
         sh:message "This Routine calibrates an IMU it does not also dependsOn. Add the matching dependsOn edge to the same IMU." ;
         sh:select """

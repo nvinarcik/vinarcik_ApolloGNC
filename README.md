@@ -12,6 +12,25 @@ This is an [OML](https://www.modelware.io/) project, split into a method (vocabu
 - `src/method/oml/www.example.com/apollo-cm-gnc/method/bundle.oml` — the vocabulary bundle. Bundling the vocabulary is what makes the reasoner treat sibling concepts without a common subtype as disjoint by closed-world closure; without it, disjointness axioms never fire.
 - `src/model/oml/www.example.com/apollo-cm-gnc/project/description.oml` — the description: instances of the actual CM PGNCS components, interfaces, and routines (8 components, 14 flight programs).
 - `src/model/oml/www.example.com/apollo-cm-gnc/project/bundle.oml` — the description bundle, closing the description over the method bundle.
+- `src/method/shapes/www.example.com/apollo-cm-gnc/method/` — SHACL shapes for components and routines.
+- `src/method/md/www.example.com/apollo-cm-gnc/method/` — editor templates (`components` tree editor, `routines` table editor), invoked from the thin pages in `src/model/md` with a `compose` block.
+- `src/method/oml/www.example.com/apollo-cm-gnc/codegen/impact.oml` — the Component Impact Report generator (spec and template).
+- `src/model/oml/www.example.com/apollo-cm-gnc/project/codegen.oml` — the generator config for this model.
+
+## Component Impact Report
+
+`oml codegen -c impact` writes `build/docs/Apollo-CM-GNC-impact.md`. For every component it lists the flight programs that depend on it, directly or through another program or component, with each program's kind, mission phase and criticality, plus the path the dependency takes. It also lists the components that depend on it and, for an electrical bus, the load on it. The summary table at the top answers the model's central question for every component at once.
+
+## Using the method as a package
+
+Everything under `src/method` is packaged as `@vinarcik/apollo-gnc-method`: the vocabulary, the shapes, the editor templates and the generator.
+
+```bash
+oml pack                                  # writes build/dist/*.tgz
+oml publish -r http://localhost:4873      # local Verdaccio registry
+```
+
+A consumer declares the package under `dependencies` in its `.oml/settings.yml`, runs `oml install -r http://localhost:4873`, uses `<http://www.example.com/apollo-cm-gnc/method/bundle#>` from its description bundle, and adds a `codegen:Config` that points at `impact:ImpactReportSpec` with `path`, `file` and `title` bindings.
 
 ## Getting started
 
