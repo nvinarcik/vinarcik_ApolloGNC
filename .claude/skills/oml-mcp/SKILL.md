@@ -50,9 +50,15 @@ Hint: Only if a query you *expected* to return data comes back empty, run one di
 1. Retrieve context first:
    - Identify relevant classes, properties, and existing instances.
    - Identify candidate target ontologies for each intended change.
+   - For every instance you will create, find existing instances of the same kind (e.g. other routines) and note their types. New instances follow the same typing pattern as their siblings.
+   - For every value you will change, read the member's annotations (e.g. `dc:description`) and note any text that states or explains the old value.
+
+**Scope: do only what was asked.**
+- Assert only the facts the user requested, plus the facts the shape requires (`sh:minCount >= 1`). If other facts seem useful (e.g. an extra `precedes` link), list them as suggestions in your answer instead of asserting them.
+- A request to add or change data is a description-only change. Do not add or change vocabulary concepts, properties, or shapes to make it fit. If no existing class fits, stop and ask the user.
 
 2. Use `oml_shapes` on the class IRI of every instance type you intend to create or modify. Read the result carefully — it is your specification for `oml_update`. Extract:
-   - `sh:targetClass` — confirms the class IRI to assert as the instance type.
+   - `sh:targetClass` — confirms the class IRI to assert as the instance type. Assert the **most specific** (leaf) class that fits, matching how sibling instances are typed. Do not assert an abstract or intermediate class (one that has subclasses) when its siblings use a leaf class; superclasses are inferred by the reasoner.
    - `sh:property / sh:path` — the **exact predicate IRI** to use in each `addAssertion` or `addAnnotation` operation. Do not guess or invent predicate IRIs; use only what the shape lists.
    - `sh:class` — the class of any cross-referenced instance (the linked target must be of this class).
 
@@ -62,6 +68,7 @@ Hint: Only if a query you *expected* to return data comes back empty, run one di
    - `oml_update` is atomic: all operations succeed or all fail — plan the full set before calling.
    - Order: `createInstance` → `addAssertion`/`addAnnotation` for required facts → cross-links to other instances.
    - Whenever you add a `create*` operation, also add `addAssertion` to asser the instance's type.
+   - When you change a value, include in the same call an update to any annotation on that member that states the old value (found in step 1), so the description never contradicts the data.
    - Apply directly for routine changes built from a shape (single-instance creates, simple assertions) — `oml_update` is atomic and reports lint problems on apply, so a mistake is caught and fixable without a separate preview. Reserve `preview: true` (then a second call to apply) for removals, bulk edits, or unfamiliar patterns where seeing the generated text first is worth the extra round-trip.
    - When removing data, remove dependent links before deleting members.
    - When using `createOntology`, specify the `targetFolder` as the relative workspace path to an `oml` folder that should nest the new ontology.
@@ -75,3 +82,8 @@ Hint: Only if a query you *expected* to return data comes back empty, run one di
 5. If `oml_update` reports lint problems, call a new `oml_update` to address the reported problems.
 
 6. If lint free, call `oml_validate` to validate the changes.
+
+7. Review the textual footprint of the change. `oml_update` may re-serialize the whole file (re-indenting, merging repeated assertions into comma lists, writing typed literals such as `"42.0"^^xsd:decimal`). Compare `git diff --stat` with `git diff -w --stat`, and read `git diff -w`. In your answer to the user:
+   - list the substantive changes (what was added or changed in the model), and
+   - state separately whether the file was also reformatted, and how many lines that touched, so the user can decide whether to keep or normalize it.
+   Do not hide reformatting inside a summary of "the change".
