@@ -36,7 +36,7 @@ instance ApolloIMU : method:IMU [
 ]
 
 @dc:description "The Apollo GNC DSKY. This is the interface between the astronauts and the GNC computer. Draws 15 W on average and 40 W with all lights on; the peak value is recorded."
-instance ApolloDSKY : method:DSKY [
+instance ApolloDSKY : method:DSKY, method:IMU [
     method:name "Apollo DSKY"
     method:dependsOn ApolloComputer
     method:powerConsumptionWatts 40.0
@@ -73,6 +73,7 @@ instance ApolloOpticalSubsystem : method:OpticalSubsystem [
     method:name "Apollo Optical Subsystem"
     method:dependsOn ApolloComputer
     method:manufacturer "Kollsman Instrument Company"
+    method:powerConsumptionWatts 20.0
     method:poweredBy ApolloElectricalBus
 ]
 
