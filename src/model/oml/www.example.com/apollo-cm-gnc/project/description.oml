@@ -29,6 +29,7 @@ instance ApolloIMU : method:IMU [
     method:name "Apollo IMU"
     method:dependsOn ApolloComputer
     method:dependsOn ApolloOpticalSubsystem
+    method:dependsOn ApolloGyroscope
     method:manufacturer "AC Electronics Division, General Motors"
     method:powerConsumptionWatts 150.0
     method:poweredBy ApolloElectricalBus
