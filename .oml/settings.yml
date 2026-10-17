@@ -5,7 +5,7 @@ oml-code:
 # project npm settings
 project:
   name: "@vinarcik/apollo-gnc-method"
-  version: 0.3.2
+  version: 1.0.0
   title: Vinarcik Apollo GNC
   description: A method for modeling spacecraft guidance, navigation and control (GNC) hardware and flight software, with editor templates, SHACL shapes and a component impact report generator.
 
