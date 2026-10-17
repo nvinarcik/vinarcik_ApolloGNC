@@ -29,7 +29,6 @@ instance ApolloIMU : method:IMU [
     method:name "Apollo IMU"
     method:dependsOn ApolloComputer
     method:dependsOn ApolloOpticalSubsystem
-    method:dependsOn ApolloGyroscope
     method:manufacturer "AC Electronics Division, General Motors"
     method:powerConsumptionWatts 150.0
     method:poweredBy ApolloElectricalBus
@@ -74,7 +73,6 @@ instance ApolloOpticalSubsystem : method:OpticalSubsystem [
     method:name "Apollo Optical Subsystem"
     method:dependsOn ApolloComputer
     method:manufacturer "Kollsman Instrument Company"
-    method:powerConsumptionWatts 20.0
     method:poweredBy ApolloElectricalBus
 ]
 
