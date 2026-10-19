@@ -1,5 +1,8 @@
 # Vinarcik Apollo GNC
 
+[![Release](https://img.shields.io/github/v/release/nvinarcik/vinarcik_ApolloGNC)](https://github.com/nvinarcik/vinarcik_ApolloGNC/releases/latest)
+[![Live Site](https://img.shields.io/badge/Live-Site-brightgreen)](https://nvinarcik.github.io/vinarcik_ApolloGNC/)
+
 An OML ontology of the Apollo Command Module's Primary Guidance, Navigation and Control System (PGNCS): the flight computer and its software, the optical subsystem (scanning telescope and sextant), the inertial measurement unit (gyroscopes and accelerometers), and the interfaces that translate their data into flight corrections and maneuvers. Scoped to the Command Module only — the Lunar Module is explicitly outside the boundary.
 
 The model's central question: **which routines depend on the IMU, and what degrades if it fails?** The vocabulary defines two derived concepts, `IMUDependentRoutine` and `IMUCalibrator`, that let the reasoner classify the answer directly rather than requiring it to be read off the graph by hand — see "Checking the answer" below.
